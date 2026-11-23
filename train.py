@@ -120,17 +120,17 @@ def resolve_device(requested: str) -> torch.device:
 
 
 def parse_args() -> argparse.Namespace:
-    workspace_dir = Path(__file__).resolve().parents[2]
+    project_dir = Path(__file__).resolve().parent
     parser = argparse.ArgumentParser(description="Train TransE on FB15k")
     parser.add_argument(
         "--data-dir",
         type=Path,
-        default=workspace_dir / "data" / "FB15k",
+        default=project_dir / "data" / "FB15k",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=workspace_dir / "runs" / "TransE",
+        default=project_dir / "runs" / "TransE",
     )
     parser.add_argument("--epochs", type=int, default=1000)
     parser.add_argument("--batch-size", type=int, default=1024)

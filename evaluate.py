@@ -179,17 +179,17 @@ def evaluate_link_prediction(
 
 
 def parse_args() -> argparse.Namespace:
-    workspace_dir = Path(__file__).resolve().parents[2]
+    project_dir = Path(__file__).resolve().parent
     parser = argparse.ArgumentParser(description="Evaluate TransE link prediction")
     parser.add_argument(
         "--data-dir",
         type=Path,
-        default=workspace_dir / "data" / "FB15k",
+        default=project_dir / "data" / "FB15k",
     )
     parser.add_argument(
         "--checkpoint",
         type=Path,
-        default=workspace_dir / "runs" / "TransE" / "last.pt",
+        default=project_dir / "runs" / "TransE" / "last.pt",
     )
     parser.add_argument("--split", choices=("valid", "test"), default="test")
     parser.add_argument("--triple-batch-size", type=int, default=32)

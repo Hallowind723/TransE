@@ -170,7 +170,8 @@ def _read_triples(
 
 
 def main() -> None:
-    default_data_dir = Path(__file__).resolve().parents[2] / "data" / "FB15k"
+    project_dir = Path(__file__).resolve().parent
+    default_data_dir = project_dir / "data" / "FB15k"
     parser = argparse.ArgumentParser(description="Load and inspect FB15k")
     parser.add_argument("--data-dir", type=Path, default=default_data_dir)
     parser.add_argument("--batch-size", type=int, default=1024)
