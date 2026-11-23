@@ -122,6 +122,4 @@ python evaluate.py --split valid
 
 可以通过 `--data-dir` 和 `--checkpoint` 指定其他数据集与检查点。快速检查流程时可以添加 `--limit 100`，但限制三元组数量后的结果不能作为完整测试结果。
 
-## 版本控制
 
-应提交源代码、FB15k 数据、`.gitignore`、`requirements.txt` 和 `README.md`。`.idea/`、`.venv/`、缓存以及 `runs/` 中的训练产物均被忽略。如需分享预训练模型，建议将检查点上传到 GitHub Releases。
