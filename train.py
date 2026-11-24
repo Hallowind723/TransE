@@ -8,6 +8,7 @@ import torch
 from torch.nn import functional as F
 
 from dataset import FB15kData
+from evaluate import evaluate_link_prediction
 from model import TransE
 
 
@@ -41,11 +42,11 @@ def train_epoch(
         negative_distance = model(negative)
         loss = F.relu(
             margin + positive_distance - negative_distance
-        ).mean()
+        ).sum()
         loss.backward()
         optimizer.step()
 
-        total_loss += loss.item() * current_batch_size
+        total_loss += loss.item()
         total_positive_distance += (
             positive_distance.detach().sum().item()
         )
@@ -79,6 +80,7 @@ def save_checkpoint(
     epoch: int,
     metrics: dict[str, float],
     args: argparse.Namespace,
+    validation_metrics: dict[str, float] | None = None,
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     model_state = {
@@ -104,19 +106,14 @@ def save_checkpoint(
                 "margin": args.margin,
                 "batch_size": args.batch_size,
                 "seed": args.seed,
+                "validation_interval": args.validation_interval,
+                "validation_limit": args.validation_limit,
             },
             "metrics": metrics,
+            "validation_metrics": validation_metrics,
         },
         path,
     )
-
-
-def resolve_device(requested: str) -> torch.device:
-    if requested == "auto":
-        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if requested == "cuda" and not torch.cuda.is_available():
-        raise RuntimeError("CUDA was requested but is not available")
-    return torch.device(requested)
 
 
 def parse_args() -> argparse.Namespace:
@@ -139,8 +136,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning-rate", type=float, default=0.01)
     parser.add_argument("--margin", type=float, default=1.0)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--log-interval", type=int, default=50)
+    parser.add_argument("--validation-interval", type=int, default=10)
+    parser.add_argument(
+        "--validation-limit",
+        type=int,
+        default=1000,
+        help="Number of validation triples per evaluation; 0 uses all triples",
+    )
     args = parser.parse_args()
 
     if args.epochs <= 0:
@@ -153,13 +156,17 @@ def parse_args() -> argparse.Namespace:
         parser.error("--margin must be positive")
     if args.log_interval < 0:
         parser.error("--log-interval cannot be negative")
+    if args.validation_interval <= 0:
+        parser.error("--validation-interval must be positive")
+    if args.validation_limit < 0:
+        parser.error("--validation-limit cannot be negative")
     return args
 
 
 def main() -> None:
     args = parse_args()
     torch.manual_seed(args.seed)
-    device = resolve_device(args.device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     data = FB15kData.load(args.data_dir)
     model = TransE(
@@ -178,6 +185,23 @@ def main() -> None:
     )
 
     checkpoint_path = args.output_dir / "last.pt"
+    best_checkpoint_path = args.output_dir / "best.pt"
+    best_validation_raw_mr = float("inf")
+    validation_triples = (
+        data.valid_triples
+        if args.validation_limit == 0
+        else data.valid_triples[: args.validation_limit]
+    )
+    filter_triple_sets = (
+        data.train_triples,
+        data.valid_triples,
+        data.test_triples,
+    )
+    print(
+        f"Validation: every {args.validation_interval} epochs | "
+        f"triples {len(validation_triples):,}"
+    )
+
     for epoch in range(1, args.epochs + 1):
         metrics = train_epoch(
             model=model,
@@ -191,9 +215,6 @@ def main() -> None:
             log_interval=args.log_interval,
         )
         model.normalize_entity_embeddings_()
-        save_checkpoint(
-            checkpoint_path, model, optimizer, epoch, metrics, args
-        )
         print(
             f"Epoch {epoch:04d} complete | "
             f"loss {metrics['loss']:.4f} | "
@@ -201,7 +222,53 @@ def main() -> None:
             f"negative {metrics['negative_distance']:.4f} | "
             f"{metrics['elapsed_seconds']:.1f}s"
         )
+
+        validation_metrics = None
+        if epoch % args.validation_interval == 0 or epoch == args.epochs:
+            validation_metrics = evaluate_link_prediction(
+                model=model,
+                triples=validation_triples,
+                filter_triple_sets=filter_triple_sets,
+                log_interval=0,
+            )
+            print(
+                f"Validation {epoch:04d} | "
+                f"raw MR {validation_metrics['raw_mean_rank']:.2f} | "
+                f"filtered MR {validation_metrics['filtered_mean_rank']:.2f} | "
+                f"raw Hits@10 {validation_metrics['raw_hits_at_10']:.2%} | "
+                f"filtered Hits@10 "
+                f"{validation_metrics['filtered_hits_at_10']:.2%}"
+            )
+
+        save_checkpoint(
+            checkpoint_path,
+            model,
+            optimizer,
+            epoch,
+            metrics,
+            args,
+            validation_metrics,
+        )
         print(f"Checkpoint: {checkpoint_path.resolve()}")
+
+        if (
+            validation_metrics is not None
+            and validation_metrics["raw_mean_rank"] < best_validation_raw_mr
+        ):
+            best_validation_raw_mr = validation_metrics["raw_mean_rank"]
+            save_checkpoint(
+                best_checkpoint_path,
+                model,
+                optimizer,
+                epoch,
+                metrics,
+                args,
+                validation_metrics,
+            )
+            print(
+                f"Best checkpoint: {best_checkpoint_path.resolve()} | "
+                f"raw MR {best_validation_raw_mr:.2f}"
+            )
 
 
 if __name__ == "__main__":

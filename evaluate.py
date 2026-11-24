@@ -9,7 +9,7 @@ from torch import Tensor
 
 from dataset import FB15kData
 from model import TransE
-from train import resolve_device
+
 
 
 FilterIndex = dict[tuple[int, int], tuple[int, ...]]
@@ -196,7 +196,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--candidate-batch-size", type=int, default=1024)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--log-interval", type=int, default=1000)
-    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     args = parser.parse_args()
 
     if args.triple_batch_size <= 0:
@@ -215,7 +214,7 @@ def main() -> None:
     if not args.checkpoint.is_file():
         raise FileNotFoundError(f"Checkpoint not found: {args.checkpoint}")
 
-    device = resolve_device(args.device)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = FB15kData.load(args.data_dir)
     checkpoint = torch.load(
         args.checkpoint, map_location="cpu", weights_only=True
