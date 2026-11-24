@@ -119,7 +119,3 @@ python evaluate.py --data-dir /path/to/FB15k --checkpoint runs/TransE/best.pt --
 ```
 
 正式对比论文结果时应使用 `best.pt`；需要查看最近一轮时可以将 `--checkpoint` 改为 `last.pt`。可以通过 `--split valid` 在验证集上评估。快速检查流程时可以添加 `--limit 100`，但限制三元组数量后的结果不能作为完整测试结果。
-
-## 提交到 GitHub
-
-应提交源代码、`.gitignore`、`requirements.txt`、`README.md`、`README.en.md` 和 `data/FB15k/`。`.idea/`、`.venv/`、缓存以及训练生成的 `.pt` 文件均不应提交。
