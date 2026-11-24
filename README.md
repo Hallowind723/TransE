@@ -15,12 +15,20 @@
 
 ```text
 TransE/
+├── .gitignore
 ├── model.py          # TransE 模型
 ├── dataset.py        # FB15k 数据读取、负采样和批次生成
 ├── train.py          # 训练、验证与检查点保存
 ├── evaluate.py       # 链接预测评估
 ├── requirements.txt  # Python 依赖
 └── README.md
+└── data/         
+    └── FB15k/        # FB15K数据集
+        ├── entity2id.txt
+        ├── relation2id.txt
+        ├── train.txt
+        ├── valid.txt
+        └── test.txt
 ```
 
 ## 环境要求
