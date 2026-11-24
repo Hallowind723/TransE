@@ -1,5 +1,7 @@
 # TransE
 
+**简体中文** | [English](README.en.md)
+
 使用 PyTorch 实现的 TransE 知识图谱嵌入模型，支持在 FB15k 数据集上训练，并使用 Raw / Filtered Mean Rank 和 Hits@10 评估链接预测效果。
 
 ## 功能
@@ -21,7 +23,8 @@ TransE/
 ├── train.py          # 训练、验证与检查点保存
 ├── evaluate.py       # 链接预测评估
 ├── requirements.txt  # Python 依赖
-├── README.md
+├── README.md         # 中文说明
+├── README.en.md      # 英文说明
 └── data/
     └── FB15k/        # FB15K数据集
         ├── entity2id.txt
@@ -119,4 +122,4 @@ python evaluate.py --data-dir /path/to/FB15k --checkpoint runs/TransE/best.pt --
 
 ## 提交到 GitHub
 
-应提交源代码、`.gitignore`、`requirements.txt`、`README.md` 和 `data/FB15k/`。`.idea/`、`.venv/`、缓存以及训练生成的 `.pt` 文件均不应提交。
+应提交源代码、`.gitignore`、`requirements.txt`、`README.md`、`README.en.md` 和 `data/FB15k/`。`.idea/`、`.venv/`、缓存以及训练生成的 `.pt` 文件均不应提交。
