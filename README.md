@@ -78,7 +78,7 @@ FB15k/
 
 其中实体和关系映射文件使用制表符分隔名称与 ID；三元组文件依次包含头实体、尾实体和关系，同样使用制表符分隔。
 
-数据集不包含在仓库中。请将 `/path/to/FB15k` 替换为实际数据目录，或把数据放在项目内的 `data/FB15k/` 后使用 `--data-dir data/FB15k`。`data/` 已被 `.gitignore` 忽略。
+数据集已包含在仓库的 `data/FB15k/` 中，可以使用 `--data-dir data/FB15k` 指定该目录。也可以将 `/path/to/FB15k` 替换为其他实际数据目录。
 
 可以先检查数据能否正常加载：
 
@@ -119,4 +119,4 @@ python evaluate.py --data-dir /path/to/FB15k --checkpoint runs/TransE/best.pt --
 
 ## 提交到 GitHub
 
-应提交源代码、`.gitignore`、`requirements.txt` 和 `README.md`。`.idea/`、`.venv/`、数据集、缓存以及训练生成的 `.pt` 文件均不应提交。
+应提交源代码、`.gitignore`、`requirements.txt`、`README.md` 和 `data/FB15k/`。`.idea/`、`.venv/`、缓存以及训练生成的 `.pt` 文件均不应提交。
